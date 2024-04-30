@@ -9,7 +9,7 @@ import {
   Animated,
   StyleSheet,
   Dimensions,
-  Platform
+  Platform,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import MaterialIcon from 'react-native-vector-icons/MaterialIcons';
@@ -132,11 +132,13 @@ const Dashboard = () => {
     );
   };
 
-  const [scrollY] = useState(new Animated.Value(
-    // iOS has negative initial scroll value because content inset...
-    Platform.OS === "ios" ? -HEADER_MAX_HEIGHT : 0
-  ));
-  
+  const [scrollY] = useState(
+    new Animated.Value(
+      // iOS has negative initial scroll value because content inset...
+      Platform.OS === 'ios' ? -HEADER_MAX_HEIGHT : 0,
+    ),
+  );
+
   const headerTranslate = scrollY.interpolate({
     inputRange: [0, HEADER_SCROLL_DISTANCE],
     outputRange: [0, -HEADER_SCROLL_DISTANCE],
@@ -156,12 +158,11 @@ const Dashboard = () => {
 
   return (
     <View style={styles.pageContainer}>
-       
       <Animated.ScrollView
         style={styles.fill}
         scrollEventThrottle={1}
         onScroll={Animated.event(
-          [{nativeEvent: {contentOffset: {y: scrollY }}}],
+          [{nativeEvent: {contentOffset: {y: scrollY}}}],
           {useNativeDriver: true},
         )}
         // iOS offset for RefreshControl

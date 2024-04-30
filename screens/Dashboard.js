@@ -9,6 +9,7 @@ import {
   Animated,
   StyleSheet,
   Dimensions,
+  Platform
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import MaterialIcon from 'react-native-vector-icons/MaterialIcons';
@@ -29,6 +30,10 @@ const rewardsImg6 = require('../assets/funland.png');
 const offerImg1 = require('../assets/stc-pay.jpg');
 const offerImg2 = require('../assets/premium-number.jpg');
 const offerImg3 = require('../assets/roaming-addon.jpg');
+
+const HEADER_MAX_HEIGHT = 320;
+const HEADER_MIN_HEIGHT = Platform.OS === 'ios' ? 160 : 140;
+const HEADER_SCROLL_DISTANCE = HEADER_MAX_HEIGHT - HEADER_MIN_HEIGHT;
 
 const Dashboard = () => {
   const data = [
@@ -127,23 +132,46 @@ const Dashboard = () => {
     );
   };
 
-  let scrollOffsetY = useRef(new Animated.Value(0)).current;
+  const [scrollY] = useState(new Animated.Value(
+    // iOS has negative initial scroll value because content inset...
+    Platform.OS === "ios" ? -HEADER_MAX_HEIGHT : 0
+  ));
+  
+  const headerTranslate = scrollY.interpolate({
+    inputRange: [0, HEADER_SCROLL_DISTANCE],
+    outputRange: [0, -HEADER_SCROLL_DISTANCE],
+    extrapolate: 'clamp',
+  });
+
+  const titleScale = scrollY.interpolate({
+    inputRange: [0, HEADER_SCROLL_DISTANCE / 2, HEADER_SCROLL_DISTANCE],
+    outputRange: [1, 1, 0.8],
+    extrapolate: 'clamp',
+  });
+  const titleTranslate = scrollY.interpolate({
+    inputRange: [0, HEADER_SCROLL_DISTANCE / 2, HEADER_SCROLL_DISTANCE],
+    outputRange: [0, 0, -8],
+    extrapolate: 'clamp',
+  });
 
   return (
-    <SafeAreaView style={styles.pageContainer}>
-      <DynamicHeader animHeaderValue={scrollOffsetY} />
-      <ScrollView
-        scrollEventThrottle={16}
+    <View style={styles.pageContainer}>
+       
+      <Animated.ScrollView
+        style={styles.fill}
+        scrollEventThrottle={1}
         onScroll={Animated.event(
-          [{nativeEvent: {contentOffset: {y: scrollOffsetY}}}],
-          {useNativeDriver: false},
+          [{nativeEvent: {contentOffset: {y: scrollY }}}],
+          {useNativeDriver: true},
         )}
-        style={{zIndex: 1}}>
-        <View
-          style={{
-            flex: 1,
-            flexDirection: 'column',
-          }}>
+        // iOS offset for RefreshControl
+        contentInset={{
+          top: HEADER_MAX_HEIGHT,
+        }}
+        contentOffset={{
+          y: -HEADER_MAX_HEIGHT,
+        }}>
+        <View style={styles.scrollViewContent}>
           {/* Remaining balance */}
           <View
             style={{
@@ -559,12 +587,58 @@ const Dashboard = () => {
             </View>
           </View>
         </View>
-      </ScrollView>
-    </SafeAreaView>
+      </Animated.ScrollView>
+      <Animated.View
+        pointerEvents="none"
+        style={[styles.header, {transform: [{translateY: headerTranslate}]}]}>
+        {/* <Text>header22</Text> */}
+        {/* <DynamicHeader animHeaderValue={scrollY} /> */}
+      </Animated.View>
+      {/* <Animated.View
+        pointerEvents="none"
+        style={[styles.header1, {transform: [{translateY: headerTranslate}]}]}>
+        <Text>header111</Text>
+      </Animated.View> */}
+      <Animated.View
+        style={[
+          styles.bar,
+          {
+            transform: [{translateY: titleTranslate}],
+          },
+        ]}>
+        <DynamicHeader animHeaderValue={scrollY} />
+      </Animated.View>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
+  bar: {
+    backgroundColor: 'transparent',
+    marginTop: Platform.OS === 'ios' ? 28 : 0,
+    height: 100,
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+  },
+  scrollViewContent: {
+    flex: 1,
+    flexDirection: 'column',
+    // iOS uses content inset, which acts like padding.
+    paddingTop: Platform.OS !== 'ios' ? HEADER_MAX_HEIGHT : 0,
+  },
+  header: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: '#f0f0f0',
+    overflow: 'hidden',
+    height: HEADER_MAX_HEIGHT,
+  },
   safeArea: {
     flex: 1,
     backgroundColor: 'white',

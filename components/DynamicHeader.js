@@ -12,8 +12,9 @@ import {
 
 import Icon from 'react-native-vector-icons/Ionicons';
 
-let Header_Max_Height = 320;
-const Header_Min_Height = 140;
+const HEADER_MAX_HEIGHT = 320;
+const HEADER_MIN_HEIGHT = Platform.OS === 'ios' ? 160 : 140;
+const HEADER_SCROLL_DISTANCE = HEADER_MAX_HEIGHT - HEADER_MIN_HEIGHT;
 UIManager.setLayoutAnimationEnabledExperimental &&
   UIManager.setLayoutAnimationEnabledExperimental(true);
 
@@ -23,22 +24,15 @@ const DynamicHeader = ({animHeaderValue}) => {
   const contentAccordionHeight = useRef(new Animated.Value(0)).current;
 
   const toggleAccordion = () => {
-    Header_Max_Height = isExpanded ? 320 : 490;
-
+    //Header_Max_Height = isExpanded ? 320 : 490;
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     setIsExpanded(!isExpanded);
   };
 
-  const headerOpacity = animHeaderValue.interpolate({
-    inputRange: [0, 50], // Change 50 to the scroll distance you want before hiding "My balance"
-    outputRange: [1, 0],
-    extrapolate: 'clamp',
-  });
-
-  const animateHeaderHeight = animHeaderValue.interpolate({
-    inputRange: [0, Header_Max_Height - Header_Min_Height],
-    outputRange: [Header_Max_Height, Header_Min_Height],
-    extrapolate: 'clamp',
+  const balanceOpacity = animHeaderValue.interpolate({
+    inputRange: [0, HEADER_SCROLL_DISTANCE / 2, HEADER_SCROLL_DISTANCE],
+    outputRange: [1, 1, 0],
+    extrapolate: "clamp"
   });
 
   animHeaderValue.addListener(({value}) => {
@@ -50,28 +44,21 @@ const DynamicHeader = ({animHeaderValue}) => {
   });
 
   return (
-    <Animated.View
-      style={[
-        styles.header,
-        {
-          height: animateHeaderHeight,
-        },
-      ]}>
-      <View
+      <Animated.View
         style={{
           flex: 1,
           flexDirection: 'column',
+          width: '100%',
         }}>
         <View style={{flex: 0, backgroundColor: '#4f008d', padding: 20}}>
-          {/* <Text style={{color: '#fff'}}>Hello</Text> */}
           {showBalance && (
-            <Animated.Text style={{color: '#fff', opacity: headerOpacity}}>
+            <Animated.Text style={{color: '#fff', opacity: balanceOpacity}}>
               Hello
             </Animated.Text>
           )}
           <Text style={[styles.phoneNumber, {marginBottom: 10}]}>38249000</Text>
           {showBalance && (
-            <Animated.Text style={[styles.myBalance, {opacity: headerOpacity}]}>
+            <Animated.Text style={[styles.myBalance, {opacity: balanceOpacity}]}>
               My balance
             </Animated.Text>
           )}
@@ -98,14 +85,14 @@ const DynamicHeader = ({animHeaderValue}) => {
             <Text style={{fontSize: 20, fontWeight: 'bold', color: '#1d252d'}}>
               10.500 BHD
             </Text>
-            <Text style={{fontSize: 13, marginBottom: 8}}>
+            <Text style={{fontSize: 12, marginBottom: 8}}>
               Valid until: 01/12/2024
             </Text>
 
             {showBalance && (
               <Animated.Text
                 style={{
-                  opacity: headerOpacity,
+                  //opacity: headerOpacity,
                   fontSize: 12,
                   color: '#1d252d',
                 }}>
@@ -155,9 +142,10 @@ const DynamicHeader = ({animHeaderValue}) => {
                   </Text>
                 </View>
                 <View style={styles.lineList}>
-                  <Text style={{fontSize: 12, color: '#1d252d'}}>
-                    Roaming Data
-                  </Text>
+                  <View>
+                    <Text style={{fontSize: 12, color: '#1d252d'}}>Roaming Data</Text>
+                    <Text style={{fontSize: 12, color: '#1d252d'}}>Pay as you Go status</Text>
+                  </View>
                   <Text
                     style={{
                       fontSize: 12,
@@ -209,8 +197,7 @@ const DynamicHeader = ({animHeaderValue}) => {
             </View>
           )}
         </View>
-      </View>
-    </Animated.View>
+      </Animated.View>
   );
 };
 
@@ -269,9 +256,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     borderBottomWidth: 1,
-    borderColor: '#ccc',
-    paddingVertical: 10,
+    borderColor: '#ddd',
+    paddingVertical: 11,
     color: '#1d252d',
+    alignItems: 'center',
   },
   btnRecharge: {
     backgroundColor: '#ff375e',
